@@ -14,7 +14,10 @@ import (
 	"unicode/utf8"
 )
 
-var decodeTimeZone *time.Location
+//DecodeTimeZone - set this variable if a specific TZ should be 
+//used when decoding timestamps. If NOT set, timestamps will be
+//decoded to UTC Timestamps.
+var DecodeTimeZone *time.Location
 
 func readNBytes(src *bufio.Reader, n int) []byte {
 	ret := make([]byte, n)
@@ -535,6 +538,10 @@ func moreBytesToRead(src *bufio.Reader) bool {
 	return false
 }
 
+//Cbor2JsonManyObjects - converts a stream of CBOR Data and outputs to
+//another stream. Returns error object if any error is detected in CBOR Data during decoding
+//CBOR encoding is such that it is NOT possible to RECOVER from any erroneous bytes in CBOR Data
+//So we stop decoding
 func Cbor2JsonManyObjects(src io.Reader, dst io.Writer) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -576,6 +583,7 @@ func DecodeIfBinaryToString(in []byte) string {
 	return string(in)
 }
 
+//DecodeObjectToStr - Decode a single CBOR encoded object to a string
 func DecodeObjectToStr(in []byte) string {
 	if binaryFmt(in) {
 		var b bytes.Buffer
