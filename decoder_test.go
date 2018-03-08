@@ -256,7 +256,7 @@ func TestDecodeTimestamp(t *testing.T) {
 		{"2013-02-03T19:54:00-08:00", "\xc1\x1a\x51\x0f\x30\xd8", "2013-02-04T03:54:00Z"},
 		{"1950-02-03T19:54:00-08:00", "\xc1\x3a\x25\x71\x93\xa7", "1950-02-04T03:54:00Z"},
 	}
-	decodeTimeZone, _ = time.LoadLocation("UTC")
+	DecodeTimeZone, _ = time.LoadLocation("UTC")
 	for _, tc := range timeIntegerTestcases {
 		tm := decodeTagData(getReader(tc.binary))
 		if string(tm) != "\""+tc.rfcStr+"\"" {

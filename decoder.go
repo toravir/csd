@@ -420,8 +420,8 @@ func decodeTimeStamp(src *bufio.Reader) []byte {
 	if tsMajor == majorTypeUnsignedInt || tsMajor == majorTypeNegativeInt {
 		n := decodeInteger(src)
 		t := time.Unix(n, 0)
-		if decodeTimeZone != nil {
-			t = t.In(decodeTimeZone)
+		if DecodeTimeZone != nil {
+			t = t.In(DecodeTimeZone)
 		} else {
 			t = t.In(time.UTC)
 		}
@@ -436,8 +436,8 @@ func decodeTimeStamp(src *bufio.Reader) []byte {
 		n -= float64(secs)
 		n *= float64(1e9)
 		t := time.Unix(secs, int64(n))
-		if decodeTimeZone != nil {
-			t = t.In(decodeTimeZone)
+		if DecodeTimeZone != nil {
+			t = t.In(DecodeTimeZone)
 		} else {
 			t = t.In(time.UTC)
 		}
