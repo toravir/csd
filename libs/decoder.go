@@ -1,5 +1,7 @@
 package csd
 
+// This file contains code to decode a stream of CBOR Data into JSON.
+
 import (
 	"bufio"
 	"bytes"
@@ -14,10 +16,12 @@ import (
 	"unicode/utf8"
 )
 
-//DecodeTimeZone - set this variable if a specific TZ should be 
-//used when decoding timestamps. If NOT set, timestamps will be
-//decoded to UTC Timestamps.
+// DecodeTimeZone - set this variable if a specific TZ should be 
+// used when decoding timestamps. If NOT set, timestamps will be
+// decoded to UTC Timestamps.
 var DecodeTimeZone *time.Location
+
+const hexTable = "0123456789abcdef"
 
 func readNBytes(src *bufio.Reader, n int) []byte {
 	ret := make([]byte, n)
@@ -66,10 +70,8 @@ func decodeIntAdditonalType(src *bufio.Reader, minor byte) int64 {
 	return val
 }
 
-// decodeInteger
 func decodeInteger(src *bufio.Reader) int64 {
 	pb := readByte(src)
-	//fmt.Println("PB:", pb)
 	major := pb & maskOutAdditionalType
 	minor := pb & maskOutMajorType
 	if major != majorTypeUnsignedInt && major != majorTypeNegativeInt {
@@ -82,7 +84,6 @@ func decodeInteger(src *bufio.Reader) int64 {
 	return (-1 - val)
 }
 
-// decodeInteger
 func decodeFloat(src *bufio.Reader) (float64, int) {
 	pb := readByte(src)
 	major := pb & maskOutAdditionalType
@@ -133,12 +134,8 @@ func decodeFloat(src *bufio.Reader) (float64, int) {
 	panic(fmt.Errorf("Invalid Additional Type: %d in decodeFloat", minor))
 }
 
-// appendStringComplex is used by appendString to take over an in
-// progress JSON string encoding that encountered a character that needs
-// to be encoded.
 func decodeStringComplex(dst []byte, s string, pos uint) []byte {
 	i := int(pos)
-	const hex = "0123456789abcdef"
 	start := 0
 
 	for i < len(s) {
@@ -185,7 +182,7 @@ func decodeStringComplex(dst []byte, s string, pos uint) []byte {
 		case '\t':
 			dst = append(dst, '\\', 't')
 		default:
-			dst = append(dst, '\\', 'u', '0', '0', hex[b>>4], hex[b&0xF])
+			dst = append(dst, '\\', 'u', '0', '0', hexTable[b>>4], hexTable[b&0xF])
 		}
 		i++
 		start = i
@@ -271,7 +268,6 @@ func array2Json(src *bufio.Reader, dst io.Writer) {
 			}
 			if pb[0] == byte(majorTypeSimpleAndFloat|additionalTypeBreak) {
 				readByte(src)
-				//end of Array
 				break
 			}
 		}
@@ -283,7 +279,6 @@ func array2Json(src *bufio.Reader, dst io.Writer) {
 			}
 			if pb[0] == byte(majorTypeSimpleAndFloat|additionalTypeBreak) {
 				readByte(src)
-				//end of Array
 				break
 			}
 			dst.Write([]byte{','})
@@ -318,13 +313,12 @@ func map2Json(src *bufio.Reader, dst io.Writer) {
 			}
 			if pb[0] == byte(majorTypeSimpleAndFloat|additionalTypeBreak) {
 				readByte(src)
-				//end of Array
 				break
 			}
 		}
 		cbor2JsonOneObject(src, dst)
 		if i%2 == 0 {
-			//Even position values are keys
+			// Even position values are keys.
 			dst.Write([]byte{':'})
 		} else {
 			if unSpecifiedCount {
@@ -334,7 +328,6 @@ func map2Json(src *bufio.Reader, dst io.Writer) {
 				}
 				if pb[0] == byte(majorTypeSimpleAndFloat|additionalTypeBreak) {
 					readByte(src)
-					//end of Array
 					break
 				}
 				dst.Write([]byte{','})
@@ -357,29 +350,30 @@ func decodeTagData(src *bufio.Reader) []byte {
 	case additionalTypeTimestamp:
 		return decodeTimeStamp(src)
 
-	case additionalTypeEmbeddedJSON:
-		pb := readByte(src)
-		dataMajor := pb & maskOutAdditionalType
-		if dataMajor == majorTypeByteString {
-			src.UnreadByte()
-			return decodeString(src, true)
-		}
-		panic(fmt.Errorf("Unsupported embedded Type: %d in decodeEmbeddedJSON", dataMajor))
-
+	// Tag value is larger than 256 (so uint16).
 	case additionalTypeIntUint16:
 		val := decodeIntAdditonalType(src, minor)
 
 		switch uint16(val) {
+		case additionalTypeEmbeddedJSON:
+			pb := readByte(src)
+			dataMajor := pb & maskOutAdditionalType
+			if dataMajor != majorTypeByteString {
+				panic(fmt.Errorf("Unsupported embedded Type: %d in decodeEmbeddedJSON", dataMajor))
+			}
+			src.UnreadByte()
+			return decodeString(src, true)
+
 		case additionalTypeTagNetworkAddr:
 			octets := decodeString(src, true)
 			ss := []byte{'"'}
 			switch len(octets) {
-			case 6: // MAC address
+			case 6: // MAC address.
 				ha := net.HardwareAddr(octets)
 				ss = append(append(ss, ha.String()...), '"')
-			case 4: //IPv4 Address
+			case 4: // IPv4 address.
 				fallthrough
-			case 16: //IPv6 address
+			case 16: // IPv6 address.
 				ip := net.IP(octets)
 				ss = append(append(ss, ip.String()...), '"')
 			default:
@@ -406,6 +400,15 @@ func decodeTagData(src *bufio.Reader) []byte {
 			ss := []byte{'"'}
 			ss = append(append(ss, ipPfx.String()...), '"')
 			return ss
+
+		case additionalTypeTagHexString:
+			octets := decodeString(src, true)
+			ss := []byte{'"'}
+			for _, v := range octets {
+				ss = append(ss, hexTable[v>>4], hexTable[v&0x0f])
+			}
+			return append(ss, '"')
+
 		default:
 			panic(fmt.Errorf("Unsupported Additional Tag Type: %d in decodeTagData", val))
 		}
@@ -538,10 +541,14 @@ func moreBytesToRead(src *bufio.Reader) bool {
 	return false
 }
 
-//Cbor2JsonManyObjects - converts a stream of CBOR Data and outputs to
-//another stream. Returns error object if any error is detected in CBOR Data during decoding
-//CBOR encoding is such that it is NOT possible to RECOVER from any erroneous bytes in CBOR Data
-//So we stop decoding
+// Cbor2JsonManyObjects decodes all the CBOR Objects read from src
+// reader. It keeps on decoding until reader returns EOF (error when reading).
+// Decoded string is written to the dst. At the end of every CBOR Object
+// newline is written to the output stream.
+//
+// Returns error (if any) that was encountered during decode.
+// The child functions will generate a panic when error is encountered and
+// this function will recover non-runtime Errors and return the reason as error.
 func Cbor2JsonManyObjects(src io.Reader, dst io.Writer) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -559,8 +566,7 @@ func Cbor2JsonManyObjects(src io.Reader, dst io.Writer) (err error) {
 	return nil
 }
 
-//Detect if the bytes to be printed is Binary or not
-//May be more robust method is needed here ?
+// Detect if the bytes to be printed is Binary or not.
 func binaryFmt(p []byte) bool {
 	if len(p) > 0 && p[0] > 0x7F {
 		return true
@@ -572,8 +578,8 @@ func getReader(str string) *bufio.Reader {
 	return bufio.NewReader(strings.NewReader(str))
 }
 
-//DecodeIfBinaryToString - converts a binary formatted log msg to a
-//JSON formatted String Log message - suitable for printing to Console/Syslog etc
+// DecodeIfBinaryToString converts a binary formatted log msg to a
+// JSON formatted String Log message - suitable for printing to Console/Syslog.
 func DecodeIfBinaryToString(in []byte) string {
 	if binaryFmt(in) {
 		var b bytes.Buffer
@@ -583,7 +589,8 @@ func DecodeIfBinaryToString(in []byte) string {
 	return string(in)
 }
 
-//DecodeObjectToStr - Decode a single CBOR encoded object to a string
+// DecodeObjectToStr checks if the input is a binary format, if so,
+// it will decode a single Object and return the decoded string.
 func DecodeObjectToStr(in []byte) string {
 	if binaryFmt(in) {
 		var b bytes.Buffer
@@ -593,8 +600,8 @@ func DecodeObjectToStr(in []byte) string {
 	return string(in)
 }
 
-//DecodeIfBinaryToBytes - converts a binary formatted log msg to a
-//JSON formatted Bytes Log message
+// DecodeIfBinaryToBytes checks if the input is a binary format, if so,
+// it will decode all Objects and return the decoded string as byte array.
 func DecodeIfBinaryToBytes(in []byte) []byte {
 	if binaryFmt(in) {
 		var b bytes.Buffer
