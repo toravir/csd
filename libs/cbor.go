@@ -1,4 +1,4 @@
-// Package cbor provides primitives for storing different data
+// Package csd provides primitives for storing different data
 // in the CBOR (binary) format. CBOR is defined in RFC7049.
 package csd
 
