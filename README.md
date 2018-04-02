@@ -5,12 +5,16 @@ CSD decodes a stream of CBOR bytes into JSON.
 
 Usage:
 
-    csd [-in inputFile] [-out outputFile]
+    csd [-in inputFile] [-out outputFile] [-compress]
+
+Use `-compress` if the input is a zlib compressed data - csd will uncompress and decode
 
 Run `csd -h` for a list of supported options and usage.
 
-If -in is omitted, csd reads from stdin.
-If -out is omitted, csd writes to stdout.
+If `-in` is omitted, csd reads from stdin.
+
+If `-out` is omitted, csd writes to stdout.
+
 
 ## Example
 
@@ -52,4 +56,8 @@ git clone the repository and do a `go build`.
 
 For documentation of APIs used to decode, see: https://godoc.org/github.com/toravir/csd/libs/
 
+## Limitations
+
+The input is expected to be CBOR data (either zlib-compressed or not). It is NOT possible to
+detect JSON (text) output reliably since binary format spans over JSON character set also.
 
