@@ -1,29 +1,39 @@
 package main
 
 import (
-	"fmt"
+	"compress/zlib"
+	"flag"
 	"io"
 	//	"net"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
 )
 
-func writeLog(fname string, count int) {
+func writeLog(fname string, count int, useCompress bool) {
 	opFile := os.Stdout
-	if fname != "-" {
+	if fname != "<stdout>" {
 		fil, _ := os.Create(fname)
 		opFile = fil
+		defer func() {
+			if err := fil.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 	}
+
 	var f io.WriteCloser = opFile
-	defer func() {
-		if err := opFile.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	if useCompress {
+		f = zlib.NewWriter(f)
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
+
+	}
 
 	zerolog.TimestampFunc = func() time.Time { return time.Now().Round(time.Second) }
 	log := zerolog.New(f).With().
@@ -36,27 +46,12 @@ func writeLog(fname string, count int) {
 	}
 }
 
-func printUsage() {
-	fmt.Println("Usage: genLog <outputFile> [<count>]")
-	fmt.Println("default value for count is 100")
-}
-
 func main() {
-	writeCount := 100
+	outFile := flag.String("out", "<stdout>", "Output File to which logs will be written to (WILL overwrite if already present).")
+	numLogs := flag.Int("num", 10, "Number of log messages to generate.")
+	doCompress := flag.Bool("compress", false, "Enable inline compressed writer")
 
-	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(-1)
-	} else {
-		for i := 2; i < len(os.Args); i++ {
-			count, ok := strconv.Atoi(os.Args[2])
-			if ok != nil {
-				count = 100
-			}
-			writeCount = count
-		}
-	}
-	outputFile := os.Args[1]
+	flag.Parse()
 
-	writeLog(outputFile, writeCount)
+	writeLog(*outFile, *numLogs, *doCompress)
 }

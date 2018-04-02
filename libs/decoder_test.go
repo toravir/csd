@@ -3,9 +3,9 @@ package csd
 import (
 	"bytes"
 	"encoding/hex"
+	"net"
 	"testing"
 	"time"
-	"net"
 )
 
 func TestDecodeInteger(t *testing.T) {
@@ -285,16 +285,16 @@ func TestDecodeTimestamp(t *testing.T) {
 }
 
 func TestDecodeNetworkAddr(t *testing.T) {
-    var ipAddrTestCases = []struct {
-	ipaddr net.IP
-	text   string // ASCII representation of ipaddr
-	binary string // CBOR representation of ipaddr
-}{
-	{net.IP{10, 0, 0, 1}, "\"10.0.0.1\"", "\xd9\x01\x04\x44\x0a\x00\x00\x01"},
-	{net.IP{0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x0, 0x0, 0x0, 0x0, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
-		"\"2001:db8:85a3::8a2e:370:7334\"",
-		"\xd9\x01\x04\x50\x20\x01\x0d\xb8\x85\xa3\x00\x00\x00\x00\x8a\x2e\x03\x70\x73\x34"},
-}
+	var ipAddrTestCases = []struct {
+		ipaddr net.IP
+		text   string // ASCII representation of ipaddr
+		binary string // CBOR representation of ipaddr
+	}{
+		{net.IP{10, 0, 0, 1}, "\"10.0.0.1\"", "\xd9\x01\x04\x44\x0a\x00\x00\x01"},
+		{net.IP{0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x0, 0x0, 0x0, 0x0, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
+			"\"2001:db8:85a3::8a2e:370:7334\"",
+			"\xd9\x01\x04\x50\x20\x01\x0d\xb8\x85\xa3\x00\x00\x00\x00\x8a\x2e\x03\x70\x73\x34"},
+	}
 	for _, tc := range ipAddrTestCases {
 		d1 := decodeTagData(getReader(tc.binary))
 		if string(d1) != tc.text {
@@ -304,14 +304,14 @@ func TestDecodeNetworkAddr(t *testing.T) {
 }
 
 func TestDecodeMACAddr(t *testing.T) {
-    var macAddrTestCases = []struct {
-	macaddr net.HardwareAddr
-	text    string // ASCII representation of macaddr
-	binary  string // CBOR representation of macaddr
-}{
-	{net.HardwareAddr{0x12, 0x34, 0x56, 0x78, 0x90, 0xab}, "\"12:34:56:78:90:ab\"", "\xd9\x01\x04\x46\x12\x34\x56\x78\x90\xab"},
-	{net.HardwareAddr{0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3}, "\"20:01:0d:b8:85:a3\"", "\xd9\x01\x04\x46\x20\x01\x0d\xb8\x85\xa3"},
-}
+	var macAddrTestCases = []struct {
+		macaddr net.HardwareAddr
+		text    string // ASCII representation of macaddr
+		binary  string // CBOR representation of macaddr
+	}{
+		{net.HardwareAddr{0x12, 0x34, 0x56, 0x78, 0x90, 0xab}, "\"12:34:56:78:90:ab\"", "\xd9\x01\x04\x46\x12\x34\x56\x78\x90\xab"},
+		{net.HardwareAddr{0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3}, "\"20:01:0d:b8:85:a3\"", "\xd9\x01\x04\x46\x20\x01\x0d\xb8\x85\xa3"},
+	}
 
 	for _, tc := range macAddrTestCases {
 		d1 := decodeTagData(getReader(tc.binary))
@@ -322,15 +322,15 @@ func TestDecodeMACAddr(t *testing.T) {
 }
 
 func TestDecodeIPPrefix(t *testing.T) {
-    var IPPrefixTestCases = []struct {
-	pfx    net.IPNet
-	text   string // ASCII representation of pfx
-	binary string // CBOR representation of pfx
-}{
-	{net.IPNet{IP: net.IP{0, 0, 0, 0}, Mask: net.CIDRMask(0, 32)}, "\"0.0.0.0/0\"", "\xd9\x01\x05\xa1\x44\x00\x00\x00\x00\x00"},
-	{net.IPNet{IP: net.IP{192, 168, 0, 100}, Mask: net.CIDRMask(24, 32)}, "\"192.168.0.100/24\"",
-		"\xd9\x01\x05\xa1\x44\xc0\xa8\x00\x64\x18\x18"},
-}
+	var IPPrefixTestCases = []struct {
+		pfx    net.IPNet
+		text   string // ASCII representation of pfx
+		binary string // CBOR representation of pfx
+	}{
+		{net.IPNet{IP: net.IP{0, 0, 0, 0}, Mask: net.CIDRMask(0, 32)}, "\"0.0.0.0/0\"", "\xd9\x01\x05\xa1\x44\x00\x00\x00\x00\x00"},
+		{net.IPNet{IP: net.IP{192, 168, 0, 100}, Mask: net.CIDRMask(24, 32)}, "\"192.168.0.100/24\"",
+			"\xd9\x01\x05\xa1\x44\xc0\xa8\x00\x64\x18\x18"},
+	}
 
 	for _, tc := range IPPrefixTestCases {
 		d1 := decodeTagData(getReader(tc.binary))

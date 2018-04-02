@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/zlib"
 	"flag"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 func main() {
 	inFile := flag.String("in", "<stdin>", "Input File (cbor Encoded)")
 	outFile := flag.String("out", "<stdout>", "Output File to which decoded JSON will be written to (WILL overwrite if already present).")
+	compressedIn := flag.Bool("compress", false, "Use if input stream is zlib compressed")
 
 	flag.Parse()
 
@@ -27,6 +29,16 @@ func main() {
 		in = f
 		defer func() {
 			f.Close()
+		}()
+	}
+	if *compressedIn {
+		zin, err := zlib.NewReader(in)
+		if err != nil {
+			log.Fatal(err)
+		}
+		in = zin
+		defer func() {
+			zin.Close()
 		}()
 	}
 	if *outFile != "<stdout>" {

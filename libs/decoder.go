@@ -16,7 +16,7 @@ import (
 	"unicode/utf8"
 )
 
-// DecodeTimeZone - set this variable if a specific TZ should be 
+// DecodeTimeZone - set this variable if a specific TZ should be
 // used when decoding timestamps. If NOT set, timestamps will be
 // decoded to UTC Timestamps.
 var DecodeTimeZone *time.Location
