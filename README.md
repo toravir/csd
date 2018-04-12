@@ -1,4 +1,7 @@
 # csd (CBOR Stream Decoder)
+
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/toravir/csd/libs/) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/toravir/csd/master/LICENSE) [![Build Status](https://travis-ci.org/toravir/csd.svg?branch=master)](https://travis-ci.org/toravir/csd) [![Coverage](http://gocover.io/_badge/github.com/toravir/csd/libs)](http://gocover.io/github.com/toravir/csd/libs)
+
 CBOR Stream Decoder
 
 CSD decodes a stream of CBOR bytes into JSON.
