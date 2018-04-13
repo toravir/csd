@@ -227,22 +227,21 @@ func TestDecodeBool(t *testing.T) {
 
 func TestDecodeFloat(t *testing.T) {
 	var float32TestCases = []struct {
-		val    float32
+		val    string
 		binary string
 	}{
-		{0.0, "\xfa\x00\x00\x00\x00"},
-		{-0.0, "\xfa\x00\x00\x00\x00"},
-		{1.0, "\xfa\x3f\x80\x00\x00"},
-		{1.5, "\xfa\x3f\xc0\x00\x00"},
-		{65504.0, "\xfa\x47\x7f\xe0\x00"},
-		{-4.0, "\xfa\xc0\x80\x00\x00"},
-		{0.00006103515625, "\xfa\x38\x80\x00\x00"},
+		{"0",  "\xfa\x00\x00\x00\x00"},
+		{"1", "\xfa\x3f\x80\x00\x00"},
+		{"1.5", "\xfa\x3f\xc0\x00\x00"},
+		{"65504", "\xfa\x47\x7f\xe0\x00"},
+		{"-4", "\xfa\xc0\x80\x00\x00"},
+		{"0.000061035156", "\xfa\x38\x80\x00\x00"},
 	}
 
 	for _, tc := range float32TestCases {
-		got, _ := decodeFloat(getReader(tc.binary))
-		if got != float64(tc.val) {
-			t.Errorf("decodeFloat(0x%s)=%f, want:%f", hex.EncodeToString([]byte(tc.binary)), got, tc.val)
+		got := decodeSimpleFloat(getReader(tc.binary))
+		if string(got) != tc.val {
+			t.Errorf("decodeFloat(0x%s)=%s, want:%s\n", hex.EncodeToString([]byte(tc.binary)), got, tc.val)
 		}
 	}
 }
@@ -346,14 +345,18 @@ var compositeCborTestCases = []struct {
 }{
 	{[]byte("\xbf\x64IETF\x20\x65Array\x9f\x20\x00\x18\xc8\x14\xff\xff"), "{\"IETF\":-1,\"Array\":[-1,0,200,20]}\n"},
 	{[]byte("\xbf\x64IETF\x64YES!\x65Array\x9f\x20\x00\x18\xc8\x14\xff\xff"), "{\"IETF\":\"YES!\",\"Array\":[-1,0,200,20]}\n"},
+        {[]byte("\xbf\x65level\x64info\x67Float32\xfa\x40\x4c\xcc\xcd\xff"), "{\"level\":\"info\",\"Float32\":3.2}\n"},
 }
 
 func TestDecodeCbor2Json(t *testing.T) {
 	for _, tc := range compositeCborTestCases {
 		buf := bytes.NewBuffer([]byte{})
 		err := Cbor2JsonManyObjects(getReader(string(tc.binary)), buf)
-		if buf.String() != tc.json || err != nil {
-			t.Errorf("cbor2JsonManyObjects(0x%s)=%s, want: %s, err:%s", hex.EncodeToString(tc.binary), buf.String(), tc.json, err.Error())
+		if buf.String() != tc.json {
+			t.Errorf("cbor2JsonManyObjects(0x%s)=%s, want: %s", hex.EncodeToString(tc.binary), buf.String(), tc.json)
+		}
+		if err != nil {
+			t.Errorf("cbor2JsonManyObjects(0x%s)=%s, want: %s", hex.EncodeToString(tc.binary), buf.String(), tc.json)
 		}
 	}
 }

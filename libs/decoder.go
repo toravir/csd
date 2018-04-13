@@ -23,6 +23,9 @@ var DecodeTimeZone *time.Location
 
 const hexTable = "0123456789abcdef"
 
+const isFloat32 = 4
+const isFloat64 = 8
+
 func readNBytes(src *bufio.Reader, n int) []byte {
 	ret := make([]byte, n)
 	for i := 0; i < n; i++ {
@@ -100,11 +103,11 @@ func decodeFloat(src *bufio.Reader) (float64, int) {
 		pb := readNBytes(src, 4)
 		switch string(pb) {
 		case float32Nan:
-			return math.NaN(), 4
+			return math.NaN(), isFloat32
 		case float32PosInfinity:
-			return math.Inf(0), 4
+			return math.Inf(0), isFloat32
 		case float32NegInfinity:
-			return math.Inf(-1), 4
+			return math.Inf(-1), isFloat32
 		}
 		n := uint32(0)
 		for i := 0; i < 4; i++ {
@@ -112,16 +115,16 @@ func decodeFloat(src *bufio.Reader) (float64, int) {
 			n += uint32(pb[i])
 		}
 		val := math.Float32frombits(n)
-		return float64(val), 4
+		return float64(val), isFloat32
 	case additionalTypeFloat64:
 		pb := readNBytes(src, 8)
 		switch string(pb) {
 		case float64Nan:
-			return math.NaN(), 8
+			return math.NaN(), isFloat64
 		case float64PosInfinity:
-			return math.Inf(0), 8
+			return math.Inf(0), isFloat64
 		case float64NegInfinity:
-			return math.Inf(-1), 8
+			return math.Inf(-1), isFloat64
 		}
 		n := uint64(0)
 		for i := 0; i < 8; i++ {
@@ -129,7 +132,7 @@ func decodeFloat(src *bufio.Reader) (float64, int) {
 			n += uint64(pb[i])
 		}
 		val := math.Float64frombits(n)
-		return val, 8
+		return val, isFloat64
 	}
 	panic(fmt.Errorf("Invalid Additional Type: %d in decodeFloat", minor))
 }
@@ -483,10 +486,12 @@ func decodeSimpleFloat(src *bufio.Reader) []byte {
 		case math.IsInf(v, -1):
 			return []byte("\"-Inf\"")
 		}
-		if bc == 5 {
+		if bc == isFloat32 {
 			ba = strconv.AppendFloat(ba, v, 'f', -1, 32)
-		} else {
+		} else if bc == isFloat64 {
 			ba = strconv.AppendFloat(ba, v, 'f', -1, 64)
+		} else {
+			panic(fmt.Errorf("Invalid Float precision from decodeFloat: %d", bc))
 		}
 		return ba
 	default:
