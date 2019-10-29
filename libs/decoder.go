@@ -305,7 +305,7 @@ func map2Json(src *bufio.Reader, dst io.Writer) {
 		unSpecifiedCount = true
 	} else {
 		length := decodeIntAdditonalType(src, minor)
-		len = int(length)
+		len = int(length) * 2
 	}
 	dst.Write([]byte{'{'})
 	for i := 0; unSpecifiedCount || i < len; i++ {
