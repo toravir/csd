@@ -187,8 +187,8 @@ var mapDecodeTestCases = []struct {
 	bin  []byte
 	json string
 }{
-	{[]byte("\xa2\x64IETF\x20"), "{\"IETF\":-1}"},
-	{[]byte("\xa2\x65Array\x84\x20\x00\x18\xc8\x14"), "{\"Array\":[-1,0,200,20]}"},
+	{[]byte("\xa1\x64IETF\x20"), "{\"IETF\":-1}"},
+	{[]byte("\xa1\x65Array\x84\x20\x00\x18\xc8\x14"), "{\"Array\":[-1,0,200,20]}"},
 }
 
 func TestDecodeMap(t *testing.T) {
