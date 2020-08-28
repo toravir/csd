@@ -8,9 +8,11 @@ CSD decodes a stream of CBOR bytes into JSON.
 
 Usage:
 
-    csd [-in inputFile] [-out outputFile] [-compress]
+    csd [-in inputFile] [-out outputFile] [-compress] [-follow]
 
 Use `-compress` if the input is a zlib compressed data - csd will uncompress and decode
+
+Use `-follow` to continually monitor inputFile for new bytes and decode as they are written to the file
 
 Run `csd -h` for a list of supported options and usage.
 
