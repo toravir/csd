@@ -230,7 +230,7 @@ func TestDecodeFloat(t *testing.T) {
 		val    string
 		binary string
 	}{
-		{"0",  "\xfa\x00\x00\x00\x00"},
+		{"0", "\xfa\x00\x00\x00\x00"},
 		{"1", "\xfa\x3f\x80\x00\x00"},
 		{"1.5", "\xfa\x3f\xc0\x00\x00"},
 		{"65504", "\xfa\x47\x7f\xe0\x00"},
@@ -345,7 +345,7 @@ var compositeCborTestCases = []struct {
 }{
 	{[]byte("\xbf\x64IETF\x20\x65Array\x9f\x20\x00\x18\xc8\x14\xff\xff"), "{\"IETF\":-1,\"Array\":[-1,0,200,20]}\n"},
 	{[]byte("\xbf\x64IETF\x64YES!\x65Array\x9f\x20\x00\x18\xc8\x14\xff\xff"), "{\"IETF\":\"YES!\",\"Array\":[-1,0,200,20]}\n"},
-        {[]byte("\xbf\x65level\x64info\x67Float32\xfa\x40\x4c\xcc\xcd\xff"), "{\"level\":\"info\",\"Float32\":3.2}\n"},
+	{[]byte("\xbf\x65level\x64info\x67Float32\xfa\x40\x4c\xcc\xcd\xff"), "{\"level\":\"info\",\"Float32\":3.2}\n"},
 }
 
 func TestDecodeCbor2Json(t *testing.T) {
