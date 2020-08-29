@@ -26,6 +26,18 @@ const hexTable = "0123456789abcdef"
 const isFloat32 = 4
 const isFloat64 = 8
 
+type Decoder struct {
+	src *bufio.Reader
+}
+
+func NewDecoder(src io.Reader) *Decoder {
+	return &Decoder{bufio.NewReader(src)}
+}
+
+func (d *Decoder) Next() (map[string]interface{}, error) {
+	return unmarshalMap(d.src), nil
+}
+
 func readNBytes(src *bufio.Reader, n int) []byte {
 	ret := make([]byte, n)
 	for i := 0; i < n; i++ {
