@@ -38,6 +38,15 @@ func (d *Decoder) Next() (map[string]interface{}, error) {
 	return unmarshalMap(d.src), nil
 }
 
+func recoverPanic() {
+	recover()
+}
+
+func (d *Decoder) SafeNext() (map[string]interface{}, error) {
+	defer recoverPanic()
+	return unmarshalMap(d.src), nil
+}
+
 func readNBytes(src *bufio.Reader, n int) []byte {
 	ret := make([]byte, n)
 	for i := 0; i < n; i++ {

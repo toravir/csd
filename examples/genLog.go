@@ -41,6 +41,7 @@ func writeLog(fname string, count int, useCompress bool) {
 		Timestamp().
 		Logger()
 	for i := 0; i < count; i++ {
+		time.Sleep(time.Duration(i%5) * time.Second)
 		log.Error().
 			Int("Fault", 41650+i).Msg("TCA:")
 	}
